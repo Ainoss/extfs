@@ -29,6 +29,10 @@ int main_loop()
         }
         str2 = strdup(str);
         cmd = strtok(str2, " \n");
+        if (!cmd){
+            free(str2);
+            continue;
+        }
         arg = strtok(NULL, " \n");
         if (!strcmp(cmd, "ls")){
             if ((res = exec_ls(arg, g_pwd)) != 0)
@@ -44,6 +48,9 @@ int main_loop()
         }
         else if (!strcmp(cmd, "quit"))
             stop = 1;
+        else {
+            printf("Unsupported command %s\n", cmd);
+        }
         free(str2);
     }
 

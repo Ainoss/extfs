@@ -10,6 +10,7 @@
 
 int get_full_path(const char *start, const char *end, char *full_path)
 {
+    size_t len;
     if (end[0] == '/'){
         strcpy(full_path, end);
         return 0;
@@ -17,8 +18,12 @@ int get_full_path(const char *start, const char *end, char *full_path)
     if (!strncmp(end, "./", 2))
         end += 2;
     strcpy(full_path, start);
+    len = strlen(full_path);
+    if (full_path[len-1] != '/'){
+        full_path[len] = '/';
+        full_path[len + 1] = 0;
+    }
     strncat(full_path, end, 1024);
-    printf("start: %s, end: %s\n", start, end);
     return 0;
 }
 
@@ -32,7 +37,6 @@ int exec_ls(const char *arg, const char *pwd)
         strcpy(path, pwd);
     else
         get_full_path(pwd, arg, path);
-    printf("full path: %s\n", path);
     pdir = opendir_ext2(path);
     if (!pdir){
         LOGE("Failed opendir\n");
@@ -95,8 +99,16 @@ int exec_cat(const char *arg, const char *pwd)
 int exec_cd(const char *arg, char *pwd)
 {
     char path[1024];
+    DIR_EXT2 *pdir;
+
     get_full_path(pwd, arg, path);
-    printf("full path: %s\n", path);
+    pdir = opendir_ext2(path);
+    if (!pdir){
+        LOGE("Can't change directory to %s\n", path);
+        return 1;
+    }
+    closedir_ext2(pdir);
+    
     strcpy(pwd, path);
     return 0;
 }

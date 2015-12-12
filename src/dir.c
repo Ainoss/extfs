@@ -39,7 +39,9 @@ int dir_get_next_entry(struct ext2_dir_entry *de, uint32_t inode_id,
         }
         do {
             if (!dir_get_next_block_entry(de, &offset, blk)){
-                if (name == NULL || !strncmp(de->name, name, de->name_len)) {
+                if (name == NULL || (strlen(name) == de->name_len 
+                    && !strncmp(de->name, name, de->name_len))) 
+                {
                     release_block(blk);
                     *poffset = iblock_num * bsize + offset;
                     return 0;

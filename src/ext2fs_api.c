@@ -100,6 +100,8 @@ DIR_EXT2 *opendir_ext2(const char *name)
     for (i = 0; i < MAX_FILE_DESC; i++)
         if (dires[i].inode == 0){
             dires[i].inode = find_path_inode(name);
+            if (!dires[i].inode)
+                return NULL;
             struct ext2_inode inode;
             if (dires[i].inode == 0)
                 return NULL;
