@@ -22,7 +22,7 @@ then
     rm -r ./fs_mnt
     exit 0
 fi
-cp -r $TEST_FOLDER ./fs_mnt/
+cp -r $TEST_FOLDER/* ./fs_mnt/
 umount ./fs_mnt
 rm -r ./fs_mnt
 
