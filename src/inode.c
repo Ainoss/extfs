@@ -34,15 +34,44 @@ uint32_t get_iblock(const struct ext2_inode *pinode, uint32_t iblock_num)
 {
     const uint32_t bsize = get_block_size(&g_fs_info.sb);
     const uint32_t indirect_num = bsize / sizeof(pinode->i_block[0]);
+    const uint32_t dbl_ind_num = indirect_num * indirect_num;
     const uint32_t direct_num = 12;
 
     if (iblock_num < direct_num)
         return pinode->i_block[iblock_num];
-    else if (iblock_num < direct_num + indirect_num){
+    else {
         void* blk;
         uint32_t res = 0;
-        iblock_num -= direct_num;
-        if (!(blk = read_block(pinode->i_block[direct_num])))
+        uint32_t interm_blk;
+        if ((iblock_num -= direct_num) < indirect_num){
+            interm_blk = pinode->i_block[direct_num];
+        }
+        else if ((iblock_num -= indirect_num) < dbl_ind_num){
+            if (!(blk = read_block(pinode->i_block[direct_num + 1])))
+                return 0;
+            interm_blk = ((uint32_t*)blk)[iblock_num / indirect_num];
+            release_block(blk);
+            iblock_num %= indirect_num;
+        }
+        else if ((iblock_num -= dbl_ind_num) < dbl_ind_num * indirect_num){
+            if (!(blk = read_block(pinode->i_block[direct_num + 2])))
+                return 0;
+            interm_blk = ((uint32_t*)blk)[iblock_num / dbl_ind_num];
+            release_block(blk);
+            iblock_num %= dbl_ind_num;
+
+            if (!(blk = read_block(interm_blk)))
+                return 0;
+            interm_blk = ((uint32_t*)blk)[iblock_num / indirect_num];
+            release_block(blk);
+            iblock_num %= indirect_num;
+        }
+        else {
+            LOGE("Too big iblock_num!\n");
+            return 0;
+        }
+
+        if (!(blk = read_block(interm_blk)))
             return 0;
         res = ((uint32_t*)blk)[iblock_num];
         release_block(blk);
